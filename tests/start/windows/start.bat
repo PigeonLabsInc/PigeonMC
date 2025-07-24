@@ -1,9 +1,9 @@
 @echo off
-title Minecraft PigeonMC Server 1.20.1
-echo Starting Minecraft server...
+title PigeonMC Server 1.20.1
+echo Starting PigeonMC server...
 
-java -Xms256M -Xmx3G -XX:+UseG1GC -jar pigeon-server-mc.1.20.1.jar nogui
+pigeon-server.exe
 
 echo.
-echo The server is down!
+echo The server has stopped!
 pause
