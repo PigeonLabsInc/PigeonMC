@@ -1,5 +1,5 @@
 # Global ownership for all files
-* @PigeonLabsInc/PigeonMC
+* @PigeonLabsInc/core-devs
 
 # Only files related to GitHub settings
 /.github/           @PigeonLabsInc/infra-team
