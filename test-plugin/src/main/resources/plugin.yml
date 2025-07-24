@@ -1,0 +1,18 @@
+name: AdvancedAntiCheat
+main: com.icelater.anticheat.AdvancedAntiCheat
+version: 1.0.0
+api-version: 1.20
+commands:
+  anticheat:
+    description: AntiCheat admin commands
+    usage: /<command> <args>
+permissions:
+  anticheat.bypass:
+    description: Bypass all checks
+    default: op
+  anticheat.reload:
+    description: Reload plugin config
+    default: op
+  anticheat.status:
+    description: Check plugin status
+    default: op
