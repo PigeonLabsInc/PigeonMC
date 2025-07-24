@@ -17,4 +17,4 @@
 *.bat            @PigeonLabsInc/ops-team
 
 # Other files
-./               @PigeonLabsInc
+/               @PigeonLabsInc
