@@ -1,0 +1,38 @@
+{
+  "id": "pigeonmc-server",
+  "name": "PigeonMC Server",
+  "description": "A high-performance, C++-based Minecraft server compatible with version 1.20.1.",
+  "version": "1.0.0",
+  "author": "IceLater",
+  "license": "MIT",
+  "platform": "native",
+  "language": "C++",
+  "minecraft_version": "1.20.1",
+  "entry": "./src",
+  "arguments": [],
+  "features": {
+    "multithreaded": true,
+    "plugin_support": false,
+    "mod_support": false,
+    "web_admin_panel": false,
+    "console_interface": true
+  },
+  "system_requirements": {
+    "os": ["windows", "linux"],
+    "architecture": ["x86_64"],
+    "memory_min": "128MB",
+    "memory_recommended": "2GB"
+  },
+  "build": {
+    "compiler": "g++",
+    "standard": "c++20",
+    "dependencies": [
+      "asio",
+      "zlib",
+      "nlohmann/json"
+    ]
+  },
+  "support": {
+    "issues": "https://github.com/PigeonLabsInc/PigeonMC/issues"
+  }
+}
