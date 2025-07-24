@@ -6,7 +6,7 @@
   <artifactId>AdvancedAntiCheat</artifactId>
   <version>1.0.0</version>
   <name>AdvancedAntiCheat</name>
-  <description>Highly modular and comprehensive anti-cheat for Spigot/Paper</description>
+  <description>Highly modular and comprehensive anti-cheat for PigeonMC</description>
   <dependencies>
     <dependency>
       <groupId>io.pigeonmc.pigeon</groupId>
