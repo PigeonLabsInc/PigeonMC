@@ -239,7 +239,7 @@ using ConnectionPtr = std::shared_ptr<Connection>;
     }
 
 public:
-    explicit Connection(tcp::socket socket) 
+    explicit Connection(tcp::socket&& socket) 
         : socket_(std::move(socket))
         , state_(ConnectionState::HANDSHAKING)
         , read_buffer_(8192)
