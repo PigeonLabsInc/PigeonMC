@@ -15,12 +15,46 @@ find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 
-add_subdirectory(third_party/asio)
-add_subdirectory(third_party/nlohmann_json)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/asio")
+    message(STATUS "ASIO not found, downloading...")
+    file(DOWNLOAD
+        "https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-1-28-0.tar.gz"
+        "${CMAKE_CURRENT_BINARY_DIR}/asio.tar.gz"
+    )
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E tar xzf asio.tar.gz
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    file(RENAME 
+        "${CMAKE_CURRENT_BINARY_DIR}/asio-asio-1-28-0"
+        "${CMAKE_CURRENT_SOURCE_DIR}/third_party/asio"
+    )
+endif()
+
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/nlohmann_json")
+    message(STATUS "nlohmann/json not found, downloading...")
+    file(DOWNLOAD
+        "https://github.com/nlohmann/json/releases/download/v3.11.2/include.zip"
+        "${CMAKE_CURRENT_BINARY_DIR}/json.zip"
+    )
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E tar xzf json.zip
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    file(RENAME
+        "${CMAKE_CURRENT_BINARY_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/third_party/nlohmann_json"
+    )
+endif()
 
 file(GLOB_RECURSE SOURCES
-    "src/*.cpp"
-    "src/*.hpp"
+    "src/core/*.cpp"
+    "src/network/*.cpp"
+    "src/world/*.cpp"
+    "src/player/*.cpp"
+    "src/entity/*.cpp"
+    "src/server/*.cpp"
+    "src/main.cpp"
 )
 
 add_executable(minecraft_server ${SOURCES})
@@ -28,7 +62,7 @@ add_executable(minecraft_server ${SOURCES})
 target_include_directories(minecraft_server PRIVATE
     src/
     third_party/asio/asio/include
-    third_party/nlohmann_json/include
+    third_party/nlohmann_json/
 )
 
 target_link_libraries(minecraft_server PRIVATE
@@ -36,6 +70,11 @@ target_link_libraries(minecraft_server PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
     ZLIB::ZLIB
+)
+
+target_compile_definitions(minecraft_server PRIVATE
+    ASIO_STANDALONE
+    ASIO_NO_DEPRECATED
 )
 
 target_compile_options(minecraft_server PRIVATE
@@ -46,4 +85,27 @@ target_compile_options(minecraft_server PRIVATE
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(minecraft_server PRIVATE -s)
+    set_target_properties(minecraft_server PROPERTIES
+        INTERPROCEDURAL_OPTIMIZATION TRUE
+    )
+endif()
+
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
+
+add_custom_target(run
+    COMMAND minecraft_server
+    DEPENDS minecraft_server
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+install(TARGETS minecraft_server
+    RUNTIME DESTINATION bin
+)
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/server.json")
+    install(FILES server.json
+        DESTINATION .
+    )
 endif()
