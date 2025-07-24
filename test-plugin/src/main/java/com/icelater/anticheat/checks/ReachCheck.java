@@ -1,4 +1,4 @@
-package com.yourname.anticheat.checks;
+package com.icelater.anticheat.checks;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
