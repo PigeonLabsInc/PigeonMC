@@ -1,0 +1,23 @@
+checks:
+  SpeedCheck:
+    enabled: true
+    max-distance: 1.2
+    threshold: 5
+  FlyCheck:
+    enabled: true
+    max-height: 1.5
+    threshold: 3
+  ReachCheck:
+    enabled: true
+    max-reach: 3.5
+    threshold: 4
+  NoFallCheck:
+    enabled: true
+    threshold: 3
+  FastBreakCheck:
+    enabled: true
+    max-speed: 0.7
+    threshold: 5
+ban-on-violation: true
+ban-threshold: 10
+ban-message: "You have been banned for cheating!"
