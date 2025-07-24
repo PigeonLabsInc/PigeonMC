@@ -1,5 +1,100 @@
-# VSCode Stuff
-.vscode/
+# Build directories
+build/
+cmake-build-*/
+out/
 
-# Other Stuff
-test-plugin/
+# Compiled binaries
+minecraft_server
+minecraft_server.exe
+*.exe
+*.out
+*.app
+
+# Object files
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# IDE files
+.vscode/
+.idea/
+*.vcxproj*
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.opendb
+
+# Clion
+cmake-build-*/
+
+# Generated files
+*.log
+*.tmp
+*.temp
+
+# Server files
+server.json
+world/
+logs/
+*.mca
+*.dat
+*.lock
+
+# System files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*~
+*.swp
+*.swo
+
+# Core dumps
+core
+core.*
+*.core
+
+# Profiling
+*.prof
+gmon.out
+callgrind.out.*
+*.gcov
+*.gcda
+*.gcno
+
+# Memory check
+*.valgrind
+*.msan
+*.asan
+*.tsan
+
+# Package managers
+node_modules/
+*.npm
+.pnpm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
