@@ -23,13 +23,14 @@ private:
     std::atomic<bool> running_{false};
     
     void start_accept() {
-        auto new_connection = std::make_shared<Connection>(
-            tcp::socket(io_context_));
+        auto socket = std::make_unique<tcp::socket>(io_context_);
+        auto raw_socket = socket.get();
         
-        acceptor_.async_accept(new_connection->socket_,
-            [this, new_connection](std::error_code ec) {
+        acceptor_.async_accept(*raw_socket,
+            [this, socket = std::move(socket)](std::error_code ec) mutable {
                 if (!ec) {
-                    handle_new_connection(new_connection);
+                    auto connection = std::make_shared<Connection>(std::move(*socket));
+                    handle_new_connection(connection);
                 }
                 
                 if (running_.load()) {
