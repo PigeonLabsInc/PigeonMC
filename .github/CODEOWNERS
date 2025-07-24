@@ -1,0 +1,20 @@
+# Global ownership for all files
+* @PigeonLabs/core-devs
+
+# Only files related to GitHub settings
+/.github/           @PigeonLabs/infra-team
+/.github/CODEOWNERS @PigeonLabs/core-devs
+
+# Server codes
+/src/            @PigeonLabs/core-devs
+
+# Building systems
+/CMakeLists.txt  @PigeonLabs/build-team
+
+# Shell and Batch scripts
+/scripts/        @PigeonLabs/ops-team
+*.sh             @PigeonLabs/ops-team
+*.bat            @PigeonLabs/ops-team
+
+# Other files
+./               @PigeonLabs
