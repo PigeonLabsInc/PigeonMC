@@ -16,9 +16,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Clean output folder
+      - name: Clean output folder and create third_party
         run: |
           if (Test-Path output) { Remove-Item output -Recurse -Force }
+          if (Test-Path third_party) { Remove-Item third_party -Recurse -Force }
+          New-Item -ItemType Directory -Path third_party -Force
 
       - name: Setup vcpkg
         run: |
