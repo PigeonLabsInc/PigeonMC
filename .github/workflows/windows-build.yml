@@ -34,7 +34,7 @@ jobs:
         run: .\vcpkg\vcpkg.exe integrate install
 
       - name: Configure with CMake
-        run: cmake -S . -B output -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:GITHUB_WORKSPACE\vcpkg\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows
+        run: cmake -S . -B output -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:GITHUB_WORKSPACE\vcpkg\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_CXX_FLAGS="/W3"
 
       - name: Build the project
         run: cmake --build output --config Release
