@@ -34,7 +34,15 @@ jobs:
           .\vcpkg\vcpkg.exe install zlib:x64-windows
 
       - name: Configure project with CMake + vcpkg
-        run: cmake -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_BUILD_TYPE=Release -S . -B output
+        shell: pwsh
+        run: |
+          $tc = Join-Path $Env:GITHUB_WORKSPACE 'vcpkg\scripts\buildsystems\vcpkg.cmake'
+          cmake `
+            -DCMAKE_TOOLCHAIN_FILE="$tc" `
+            -DVCPKG_TARGET_TRIPLET="x64-windows" `
+            -DCMAKE_BUILD_TYPE="Release" `
+            -S "$Env:GITHUB_WORKSPACE" `
+            -B "$Env:GITHUB_WORKSPACE\output"
 
       - name: Build the project
         run: cmake --build output --config Release
