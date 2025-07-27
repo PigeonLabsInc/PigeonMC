@@ -27,23 +27,25 @@ jobs:
             Remove-Item output -Recurse -Force
           }
 
-      - name: Prepare third_party folder
-        run: |
-          # Eğer varsa önce sil
-          if (Test-Path third_party) {
-            Remove-Item third_party -Recurse -Force
-          }
-          # Yeni oluştur
-          New-Item -ItemType Directory third_party
+      - name: Set up vcpkg
+        uses: lukka/setup-vcpkg@v1
+        with:
+          vcpkgGitCommitId: ''
 
-      - name: Bootstrap vcpkg and install zlib
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
-          .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
-          .\vcpkg\vcpkg.exe install zlib:x64-windows
+      - name: Install zlib via vcpkg
+        run: vcpkg install zlib:x64-windows
 
       - name: Configure project with CMake + vcpkg
-        run: cmake -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_BUILD_TYPE=Release -S . -B output
+        shell: pwsh
+        run: |
+          $triplet = 'x64-windows'
+          $tc     = Join-Path $Env:VCPKG_ROOT "scripts\buildsystems\vcpkg.cmake"
+          cmake `
+            -S "${{ github.workspace }}" `
+            -B "${{ github.workspace }}\output" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="$tc" `
+            -DVCPKG_TARGET_TRIPLET="$triplet"
 
       - name: Build the project
         run: cmake --build output --config Release
