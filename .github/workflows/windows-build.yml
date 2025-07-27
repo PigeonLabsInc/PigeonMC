@@ -14,14 +14,12 @@ jobs:
     permissions:
       contents: read
       actions: write
-    env:
-      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Clean old output directory
+      - name: Clean output & third_party directories
         run: |
           if (Test-Path output) {
             Remove-Item output -Recurse -Force
@@ -31,24 +29,18 @@ jobs:
           }
           New-Item -ItemType Directory third_party
 
-      - name: Setup vcpkg and install zlib
-        uses: lukka/run-vcpkg@v11
-        with:
-          ports: zlib
-          triplet: x64-windows
+      - name: Install ZLIB via Chocolatey
+        run: choco install zlib -y
 
-      - name: Configure project with CMake + vcpkg
-        shell: pwsh
-        run: |
-          $tc = Join-Path $Env:VCPKG_ROOT 'scripts\buildsystems\vcpkg.cmake'
-          cmake -S "$Env:GITHUB_WORKSPACE" -B "$Env:GITHUB_WORKSPACE\output" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$tc" -DVCPKG_TARGET_TRIPLET=x64-windows
+      - name: Configure project with CMake
+        run: cmake -S . -B output -DCMAKE_BUILD_TYPE=Release
 
       - name: Build the project
         run: cmake --build output --config Release
 
-      - name: Upload EXE as artifact (v4)
+      - name: Upload EXE as artifact
         uses: actions/upload-artifact@v4
         with:
           name: MinecraftServer.exe
           path: output/Release/*.exe
-          token: ${{ env.GITHUB_TOKEN }}
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
