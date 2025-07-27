@@ -5,10 +5,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Compiler-specific optimization flags
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -DNDEBUG")
+    if(MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /DNDEBUG")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -DNDEBUG")
+    endif()
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g3 -fsanitize=address")
+    if(MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Od /Zi")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g3 -fsanitize=address")
+    endif()
 endif()
 
 find_package(Threads REQUIRED)
@@ -77,14 +86,28 @@ target_compile_definitions(minecraft_server PRIVATE
     ASIO_NO_DEPRECATED
 )
 
-target_compile_options(minecraft_server PRIVATE
-    -Wall -Wextra -Wpedantic
-    -Wno-unused-parameter
-    -ffast-math
-)
+# Compiler-specific warning and optimization flags
+if(MSVC)
+    target_compile_options(minecraft_server PRIVATE
+        /W3                    # Warning level 3 (equivalent to -Wall -Wextra)
+        /fp:fast              # Fast floating-point (equivalent to -ffast-math)
+        /wd4996               # Disable deprecated warnings (equivalent to -Wno-unused-parameter)
+    )
+else()
+    target_compile_options(minecraft_server PRIVATE
+        -Wall -Wextra -Wpedantic
+        -Wno-unused-parameter
+        -ffast-math
+    )
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_link_options(minecraft_server PRIVATE -s)
+    if(MSVC)
+        # MSVC doesn't have -s equivalent, but /INCREMENTAL:NO helps
+        target_link_options(minecraft_server PRIVATE /INCREMENTAL:NO)
+    else()
+        target_link_options(minecraft_server PRIVATE -s)
+    endif()
     set_target_properties(minecraft_server PROPERTIES
         INTERPROCEDURAL_OPTIMIZATION TRUE
     )
