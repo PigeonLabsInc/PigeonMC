@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Clean old output directory
-        run: |
+        run: >
           if (Test-Path output) {
             Remove-Item output -Recurse -Force
           }
@@ -34,11 +34,7 @@ jobs:
           .\vcpkg\vcpkg.exe install zlib:x64-windows
 
       - name: Configure project with CMake + vcpkg
-        run: |
-          cmake -S . -B output \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake \
-            -DVCPKG_TARGET_TRIPLET=x64-windows
+        run: cmake -S . -B output -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=.\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
 
       - name: Build the project
         run: cmake --build output --config Release
