@@ -10,25 +10,37 @@ permissions:
 
 jobs:
   build-windows:
-    name: Build on Windows
     runs-on: windows-latest
     permissions:
       contents: read
       actions: write
     env:
       GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Clean old output directory
         run: |
           if (Test-Path output) {
             Remove-Item output -Recurse -Force
           }
-      - name: Configure project with CMake
-        run: cmake -S . -B output -DCMAKE_BUILD_TYPE=Release
+
+      - name: Bootstrap vcpkg and install zlib
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+          .\vcpkg\vcpkg.exe install zlib:x64-windows
+
+      - name: Configure project with CMake + vcpkg
+        run: cmake -S . -B output `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+
       - name: Build the project
         run: cmake --build output --config Release
+
       - name: Upload EXE as artifact (v4)
         uses: actions/upload-artifact@v4
         with:
