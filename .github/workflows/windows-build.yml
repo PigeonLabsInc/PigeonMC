@@ -26,26 +26,22 @@ jobs:
           if (Test-Path output) {
             Remove-Item output -Recurse -Force
           }
+          if (Test-Path third_party) {
+            Remove-Item third_party -Recurse -Force
+          }
+          New-Item -ItemType Directory third_party
 
-      - name: Set up vcpkg
-        uses: lukka/setup-vcpkg@v1
+      - name: Setup vcpkg and install zlib
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: ''
-
-      - name: Install zlib via vcpkg
-        run: vcpkg install zlib:x64-windows
+          ports: zlib
+          triplet: x64-windows
 
       - name: Configure project with CMake + vcpkg
         shell: pwsh
         run: |
-          $triplet = 'x64-windows'
-          $tc     = Join-Path $Env:VCPKG_ROOT "scripts\buildsystems\vcpkg.cmake"
-          cmake `
-            -S "${{ github.workspace }}" `
-            -B "${{ github.workspace }}\output" `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_TOOLCHAIN_FILE="$tc" `
-            -DVCPKG_TARGET_TRIPLET="$triplet"
+          $tc = Join-Path $Env:VCPKG_ROOT 'scripts\buildsystems\vcpkg.cmake'
+          cmake -S "$Env:GITHUB_WORKSPACE" -B "$Env:GITHUB_WORKSPACE\output" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$tc" -DVCPKG_TARGET_TRIPLET=x64-windows
 
       - name: Build the project
         run: cmake --build output --config Release
