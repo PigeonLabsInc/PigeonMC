@@ -1,0 +1,26 @@
+name: Build Windows EXE (output folder)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Clon the project
+      uses: actions/checkout@v3
+
+    - name: Configure with CMake (to output folder)
+      run: cmake -S . -B output -DCMAKE_BUILD_TYPE=Release
+
+    - name: Derle
+      run: cmake --build output --config Release
+
+    - name: Load EXE file as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: minecraft_server.exe
+        path: output/Release/*.exe
+        
