@@ -34,9 +34,11 @@ jobs:
           .\vcpkg\vcpkg.exe install zlib:x64-windows
 
       - name: Configure project with CMake + vcpkg
-        run: cmake -S . -B output `
-          -DCMAKE_BUILD_TYPE=Release `
-          -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+        run: |
+          cmake -S . -B output \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=x64-windows
 
       - name: Build the project
         run: cmake --build output --config Release
