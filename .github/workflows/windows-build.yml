@@ -14,16 +14,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Clean output & third_party folders
+      - name: Clean output folder
         run: |
           if (Test-Path output) { Remove-Item output -Recurse -Force }
-          if (Test-Path third_party) { Remove-Item third_party -Recurse -Force }
-          New-Item -ItemType Directory third_party
-
-      - name: Install ZLIB via Chocolatey
-        run: choco install zlib.portable -y
 
       - name: Bootstrap vcpkg
         run: |
@@ -33,12 +28,8 @@ jobs:
       - name: Install zlib via vcpkg
         run: .\vcpkg\vcpkg.exe install zlib:x64-windows
 
-      - name: Configure & Generate with CMake (Bash)
-        shell: bash
-        run: cmake -S . -B output \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake \
-          -DVCPKG_TARGET_TRIPLET=x64-windows
+      - name: Configure & Generate with CMake
+        run: cmake -S . -B output -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
 
       - name: Build the project
         run: cmake --build output --config Release
@@ -46,6 +37,5 @@ jobs:
       - name: Upload EXE as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MinecraftServer.exe
+          name: MinecraftServer-exe
           path: output/Release/*.exe
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
