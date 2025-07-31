@@ -16,5 +16,6 @@
 *.sh             @PigeonLabsInc/ops-team
 *.bat            @PigeonLabsInc/ops-team
 
-# All files
-*               @PigeonLabsInc
+# Test files
+
+/test/           @PigeonLabsInc/test-team
