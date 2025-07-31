@@ -16,5 +16,5 @@
 *.sh             @PigeonLabsInc/ops-team
 *.bat            @PigeonLabsInc/ops-team
 
-# Other files
-/               @PigeonLabsInc
+# All files
+*               @PigeonLabsInc
