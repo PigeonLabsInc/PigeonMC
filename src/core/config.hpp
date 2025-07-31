@@ -5,6 +5,9 @@
 #include <string>
 #include <fstream>
 #include <mutex>
+#include <sstream>
+#include <vector>
+#include <thread>
 
 namespace mc {
 
@@ -12,7 +15,7 @@ class ServerConfig {
 private:
     nlohmann::json config_;
     std::string config_path_;
-    std::mutex config_mutex_;
+    mutable std::mutex config_mutex_;
     
 public:
     explicit ServerConfig(const std::string& config_path = "server.json") 
@@ -87,6 +90,7 @@ public:
             merge_config(config_, file_config);
             return true;
         } catch (const std::exception& e) {
+            (void)e;
             return false;
         }
     }
@@ -101,6 +105,7 @@ public:
             file << config_.dump(4);
             return true;
         } catch (const std::exception& e) {
+            (void)e;  // suppress warning
             return false;
         }
     }
@@ -124,6 +129,7 @@ public:
             
             return current.get<T>();
         } catch (const std::exception& e) {
+            (void)e;
             return default_value;
         }
     }
