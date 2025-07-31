@@ -17,5 +17,4 @@
 *.bat            @PigeonLabsInc/ops-team
 
 # Test files
-
 /test/           @PigeonLabsInc/test-team
