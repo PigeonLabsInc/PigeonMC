@@ -77,11 +77,22 @@ target_compile_definitions(minecraft_server PRIVATE
     ASIO_NO_DEPRECATED
 )
 
-target_compile_options(minecraft_server PRIVATE
-    -Wall -Wextra -Wpedantic
-    -Wno-unused-parameter
-    -ffast-math
-)
+if (MSVC)
+    target_compile_options(minecraft_server PRIVATE
+        /W4    
+        /WX    
+        /permissive-  
+    )
+else()
+    target_compile_options(minecraft_server PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Werror
+        -Wno-unused-parameter
+        -ffast-math
+    )
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(minecraft_server PRIVATE -s)
