@@ -8,6 +8,7 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <string>
 
 namespace mc::network {
 
@@ -20,7 +21,7 @@ private:
     tcp::acceptor acceptor_;
     std::vector<std::thread> io_threads_;
     std::unordered_set<ConnectionPtr> connections_;
-    std::mutex connections_mutex_;
+    mutable std::mutex connections_mutex_;
     std::atomic<u32> total_connections_{0};
     std::atomic<u32> active_connections_{0};
     std::atomic<bool> running_{false};
@@ -106,6 +107,65 @@ public:
     void stop() {
         if (!running_.exchange(false)) return;
         io_context_.stop();
+        {
+            std::lock_guard<std::mutex> lock(connections_mutex_);
+            for (auto& connection : connections_) {
+                connection->close();
+            }
+            connections_.clear();
+        }
+        for (auto& thread : io_threads_) {
+            if (thread.joinable()) {
+                thread.join();
+            }
+        }
+    }
+
+    void broadcast_packet(std::unique_ptr<Packet> packet) {
+        std::lock_guard<std::mutex> lock(connections_mutex_);
+        for (auto& connection : connections_) {
+            if (connection->get_state() == ConnectionState::PLAY) {
+                auto packet_copy = g_packet_manager.create_packet(
+                    packet->get_state(), packet->get_direction(), packet->get_id());
+                Buffer temp_buffer(1024);
+                packet->write(temp_buffer);
+                if (packet_copy) {
+                    packet_copy->read(temp_buffer);
+                    connection->send_packet(std::move(packet_copy));
+                }
+            }
+        }
+    }
+
+    std::vector<ConnectionPtr> get_play_connections() const {
+        std::vector<ConnectionPtr> play_connections;
+        std::lock_guard<std::mutex> lock(connections_mutex_);
+        for (const auto& connection : connections_) {
+            if (connection->get_state() == ConnectionState::PLAY) {
+                play_connections.push_back(connection);
+            }
+        }
+        return play_connections;
+    }
+
+    u32 get_total_connections() const { return total_connections_.load(); }
+    u32 get_active_connections() const { return active_connections_.load(); }
+
+    u32 get_play_connections_count() const {
+        u32 count = 0;
+        std::lock_guard<std::mutex> lock(connections_mutex_);
+        for (const auto& connection : connections_) {
+            if (connection->get_state() == ConnectionState::PLAY) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    bool is_running() const { return running_.load(); }
+};
+
+}
         {
             std::lock_guard<std::mutex> lock(connections_mutex_);
             for (auto& connection : connections_) {
