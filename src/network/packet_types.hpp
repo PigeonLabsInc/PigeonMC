@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <functional>
+#include <cstring>
 
 namespace mc::network {
 
@@ -74,8 +75,8 @@ public:
     i32 get_id() const override { return 0x00; }
     ConnectionState get_state() const override { return ConnectionState::STATUS; }
     PacketDirection get_direction() const override { return PacketDirection::SERVERBOUND; }
-    void write(Buffer& /*buffer*/) const override {}
-    void read(Buffer& /*buffer*/) override {}
+    void write(Buffer&) const override {}
+    void read(Buffer&) override {}
 };
 
 class StatusResponsePacket : public Packet {
@@ -276,15 +277,36 @@ public:
     ConnectionState get_state() const override { return ConnectionState::PLAY; }
     PacketDirection get_direction() const override { return PacketDirection::SERVERBOUND; }
     void write(Buffer& buffer) const override {
-        buffer.write_be<f64>(x);
-        buffer.write_be<f64>(y);
-        buffer.write_be<f64>(z);
+        {
+            u64 bits;
+            std::memcpy(&bits, &x, sizeof(bits));
+            buffer.write_be<u64>(bits);
+        }
+        {
+            u64 bits;
+            std::memcpy(&bits, &y, sizeof(bits));
+            buffer.write_be<u64>(bits);
+        }
+        {
+            u64 bits;
+            std::memcpy(&bits, &z, sizeof(bits));
+            buffer.write_be<u64>(bits);
+        }
         buffer.write_byte(on_ground ? 1 : 0);
     }
     void read(Buffer& buffer) override {
-        x = buffer.read_be<f64>();
-        y = buffer.read_be<f64>();
-        z = buffer.read_be<f64>();
+        {
+            u64 bits = buffer.read_be<u64>();
+            std::memcpy(&x, &bits, sizeof(bits));
+        }
+        {
+            u64 bits = buffer.read_be<u64>();
+            std::memcpy(&y, &bits, sizeof(bits));
+        }
+        {
+            u64 bits = buffer.read_be<u64>();
+            std::memcpy(&z, &bits, sizeof(bits));
+        }
         on_ground = buffer.read_byte() != 0;
     }
 };
