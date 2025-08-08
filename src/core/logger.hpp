@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <chrono>
+#include <ctime>
 
 namespace mc {
 
@@ -47,14 +48,11 @@ private:
     std::queue<LogEntry> log_queue_;
     std::mutex queue_mutex_;
     std::condition_variable queue_cv_;
-
     std::ofstream log_file_;
     std::mutex file_mutex_;
-
     std::thread writer_thread_;
     std::atomic<bool> running_{false};
     std::atomic<LogLevel> min_level_{LogLevel::INFO};
-
     bool console_output_;
     std::string log_file_path_;
     size_t max_file_size_;
@@ -86,11 +84,16 @@ private:
 
     std::string format_log_entry(const LogEntry& entry) {
         std::ostringstream oss;
-        auto now = std::chrono::system_clock::to_time_t(entry.timestamp);
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            entry.timestamp.time_since_epoch()) % 1000;
-        oss << "[" << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S")
-            << "." << std::setfill('0') << std::setw(3) << ms.count() << "] "
+        time_t tt = std::chrono::system_clock::to_time_t(entry.timestamp);
+        std::tm tm{};
+#ifdef _MSC_VER
+        localtime_s(&tm, &tt);
+#else
+        localtime_r(&tt, &tm);
+#endif
+        auto ms_total = std::chrono::duration_cast<std::chrono::milliseconds>(entry.timestamp.time_since_epoch()).count();
+        int ms_part = static_cast<int>(ms_total % 1000);
+        oss << "[" << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << "." << std::setfill('0') << std::setw(3) << ms_part << "] "
             << "[" << level_to_string(entry.level) << "] ";
         if (!entry.category.empty()) {
             oss << "[" << entry.category << "] ";
@@ -124,15 +127,25 @@ private:
 
     void rotate_log_file() {
         log_file_.close();
-        for (u32 i = max_files_ - 1; i > 0; --i) {
-            std::string old_name = log_file_path_ + "." + std::to_string(i);
-            std::string new_name = log_file_path_ + "." + std::to_string(i + 1);
-            std::rename(old_name.c_str(), new_name.c_str());
+        if (max_files_ > 1) {
+            for (u32 i = static_cast<u32>(max_files_ - 1); i > 0; --i) {
+                std::string old_name = log_file_path_ + "." + std::to_string(i);
+                std::string new_name = log_file_path_ + "." + std::to_string(i + 1);
+                std::rename(old_name.c_str(), new_name.c_str());
+            }
+            std::string backup_name = log_file_path_ + ".1";
+            std::rename(log_file_path_.c_str(), backup_name.c_str());
+        } else {
+            std::remove(log_file_path_.c_str());
         }
-        std::string backup_name = log_file_path_ + ".1";
-        std::rename(log_file_path_.c_str(), backup_name.c_str());
         log_file_.open(log_file_path_, std::ios::out | std::ios::app);
-        current_file_size_ = 0;
+        if (log_file_.is_open()) {
+            std::streampos p = log_file_.tellp();
+            if (p != std::streampos(-1)) current_file_size_ = static_cast<size_t>(p);
+            else current_file_size_ = 0;
+        } else {
+            current_file_size_ = 0;
+        }
     }
 
 public:
@@ -157,8 +170,9 @@ public:
             std::lock_guard<std::mutex> lock(file_mutex_);
             log_file_.open(log_file_path_, std::ios::out | std::ios::app);
             if (log_file_.is_open()) {
-                log_file_.seekp(0, std::ios::end);
-                current_file_size_ = log_file_.tellp();
+                std::streampos p = log_file_.tellp();
+                if (p != std::streampos(-1)) current_file_size_ = static_cast<size_t>(p);
+                else current_file_size_ = 0;
             }
         }
         running_.store(true);
