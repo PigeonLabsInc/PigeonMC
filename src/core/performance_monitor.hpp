@@ -21,16 +21,13 @@ private:
     std::atomic<u32> active_connections_{0};
     std::atomic<u64> packets_per_second_{0};
     std::atomic<u64> bytes_per_second_{0};
-
     std::array<f64, 100> tps_history_{};
     size_t tps_history_index_{0};
     std::mutex tps_mutex_;
-
     std::atomic<u64> packet_count_{0};
     std::atomic<u64> byte_count_{0};
     std::chrono::steady_clock::time_point last_network_update_;
     std::mutex network_mutex_;
-
     std::chrono::steady_clock::time_point server_start_time_;
     std::atomic<bool> monitoring_{false};
     std::thread monitor_thread_;
