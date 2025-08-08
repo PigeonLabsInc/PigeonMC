@@ -1,6 +1,3 @@
-ze;
-    }
-};
 #pragma once
 #include "packet_types.hpp"
 #include "core/buffer.hpp"
@@ -12,6 +9,7 @@ ze;
 #include <mutex>
 #include <chrono>
 #include <thread>
+#include <vector>
 
 namespace mc::network {
 
@@ -36,6 +34,7 @@ private:
     std::atomic<u32> entity_id_{0};
     Location location_;
     std::mutex location_mutex_;
+    std::vector<byte> temp_read_buf_;
 
     static size_t get_varint_size(i32 value) {
         u32 uvalue = static_cast<u32>(value);
@@ -49,9 +48,9 @@ private:
 
     void start_read() {
         if (closed_.load()) return;
+        if (temp_read_buf_.empty()) temp_read_buf_.resize(8192);
         auto self = shared_from_this();
-        asio::async_read(socket_, asio::buffer(read_buffer_.data() + read_buffer_.size(),
-                                               read_buffer_.writable()),
+        socket_.async_read_some(asio::buffer(temp_read_buf_.data(), temp_read_buf_.size()),
             [self](std::error_code ec, std::size_t bytes_transferred) {
                 if (!ec && bytes_transferred > 0) {
                     self->handle_read(bytes_transferred);
@@ -62,7 +61,7 @@ private:
     }
 
     void handle_read(std::size_t bytes_transferred) {
-        read_buffer_.write(nullptr, bytes_transferred);
+        read_buffer_.write(temp_read_buf_.data(), bytes_transferred);
         while (read_buffer_.readable() > 0) {
             size_t initial_pos = read_buffer_.size();
             try {
@@ -200,7 +199,8 @@ public:
         : socket_(std::move(s))
         , state_(ConnectionState::HANDSHAKING)
         , read_buffer_(8192)
-        , write_buffer_(8192) {
+        , write_buffer_(8192)
+        , temp_read_buf_() {
         socket_.set_option(tcp::no_delay(true));
         socket_.set_option(asio::socket_base::keep_alive(true));
     }
