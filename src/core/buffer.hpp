@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <type_traits>
 #include <cstdint>
+#include <algorithm>
+#include <limits>
 
 namespace mc {
 
@@ -21,7 +23,7 @@ private:
 
     void ensure_capacity(size_t needed) {
         if (capacity_ >= needed) return;
-        size_t new_capacity = std::max(needed, capacity_ * 2);
+        size_t new_capacity = std::max(needed, capacity_ == 0 ? size_t(1) : capacity_ * 2);
         byte* new_data = static_cast<byte*>(g_buffer_pool.allocate(new_capacity));
         if (data_ && size_ > 0) {
             std::memcpy(new_data, data_, size_);
@@ -74,6 +76,15 @@ public:
     }
 
     void write(const void* data, size_t len) {
+        if (len == 0) return;
+        if (data == nullptr) {
+            if (write_pos_ + len > capacity_) {
+                throw std::runtime_error("Insufficient buffer capacity for append");
+            }
+            write_pos_ += len;
+            size_ = std::max(size_, write_pos_);
+            return;
+        }
         ensure_capacity(write_pos_ + len);
         std::memcpy(data_ + write_pos_, data, len);
         write_pos_ += len;
@@ -109,11 +120,13 @@ public:
 
     template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
     void write_be(T value) {
-        if constexpr (sizeof(T) == 1) {
-            write_byte(static_cast<byte>(value));
+        using U = std::make_unsigned_t<T>;
+        U u = static_cast<U>(value);
+        if constexpr (sizeof(U) == 1) {
+            write_byte(static_cast<byte>(u & 0xFF));
         } else {
-            for (int i = sizeof(T) - 1; i >= 0; --i) {
-                write_byte(static_cast<byte>(value >> (i * 8)));
+            for (int i = static_cast<int>(sizeof(U) - 1); i >= 0; --i) {
+                write_byte(static_cast<byte>((u >> (i * 8)) & 0xFF));
             }
         }
     }
@@ -121,19 +134,18 @@ public:
     template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
     void write_be(T value) {
         if constexpr (sizeof(T) == 4) {
-            using U = std::uint32_t;
-            U tmp;
+            std::uint32_t tmp;
             std::memcpy(&tmp, &value, sizeof(T));
-            write_be(tmp);
+            write_be<std::uint32_t>(tmp);
         } else if constexpr (sizeof(T) == 8) {
-            using U = std::uint64_t;
-            U tmp;
+            std::uint64_t tmp;
             std::memcpy(&tmp, &value, sizeof(T));
-            write_be(tmp);
+            write_be<std::uint64_t>(tmp);
         }
     }
 
     size_t read(void* dest, size_t len) {
+        if (len == 0) return 0;
         size_t available = size_ - read_pos_;
         size_t to_read = std::min(len, available);
         if (to_read > 0) {
@@ -179,22 +191,19 @@ public:
         if (length < 0 || length > 32767) {
             throw std::runtime_error("Invalid string length");
         }
-        std::string result(length, '\0');
-        read(result.data(), length);
+        std::string result(static_cast<size_t>(length), '\0');
+        read(result.data(), static_cast<size_t>(length));
         return result;
     }
 
-    template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>, typename = void>
+    template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
     T read_be() {
-        if constexpr (sizeof(T) == 1) {
-            return static_cast<T>(read_byte());
-        } else {
-            T result = 0;
-            for (size_t i = 0; i < sizeof(T); ++i) {
-                result = (result << 8) | read_byte();
-            }
-            return result;
+        using U = std::make_unsigned_t<T>;
+        U u = 0;
+        for (size_t i = 0; i < sizeof(U); ++i) {
+            u = (u << 8) | static_cast<U>(read_byte());
         }
+        return static_cast<T>(u);
     }
 
     template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
