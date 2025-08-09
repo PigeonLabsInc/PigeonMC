@@ -75,8 +75,8 @@ public:
     i32 get_id() const override { return 0x00; }
     ConnectionState get_state() const override { return ConnectionState::STATUS; }
     PacketDirection get_direction() const override { return PacketDirection::SERVERBOUND; }
-    void write(Buffer&) const override {}
-    void read(Buffer&) override {}
+    void write(Buffer& /*buffer*/) const override {}
+    void read(Buffer& /*buffer*/) override {}
 };
 
 class StatusResponsePacket : public Packet {
