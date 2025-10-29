@@ -3,7 +3,7 @@
   "name": "PigeonMC Server",
   "description": "A high-performance, C++-based Minecraft server compatible with version 1.20.1.",
   "version": "1.0.0",
-  "author": "IceLater",
+  "author": "nuekkis",
   "license": "MIT",
   "platform": "native",
   "language": "C++",
